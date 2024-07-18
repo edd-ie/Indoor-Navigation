@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.ar.core.ArCoreApk
+import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import edd_ie.com.github.arnav.databinding.ActivityMainBinding
@@ -20,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     // requestInstall(Activity, true) will triggers installation of
     // Google Play Services for AR if necessary.
     private var userRequestedInstall = true
-    private var mSession: Session? = null
+    private var session: Session? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,11 +47,11 @@ class MainActivity : AppCompatActivity() {
             binding.txt1.text = "Device is supported"
         }
         try {
-            if (mSession == null) {
+            if (session == null) {
                 when (ArCoreApk.getInstance().requestInstall(this, userRequestedInstall)) {
                     ArCoreApk.InstallStatus.INSTALLED -> {
                         // Success: Safe to create the AR session.
-                        mSession = Session(this)
+                        session = Session(this)
                     }
                     ArCoreApk.InstallStatus.INSTALL_REQUESTED -> {
                         // When this method returns `INSTALL_REQUESTED`:
@@ -116,6 +117,24 @@ class MainActivity : AppCompatActivity() {
         // Enable AR-related functionality on ARCore supported devices only.
         arSupportCheck()
 
+        //Initializing ar session
+        createArSession()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        session?.close()
+    }
+
+    private fun createArSession() {
+        // Create a session config.
+        val config = Config(session)
+
+        // Do feature-specific operations here, such as enabling depth or turning on
+        // support for Augmented Faces.
+
+        // Configure the session.
+        session?.configure(config)
     }
 }
 
