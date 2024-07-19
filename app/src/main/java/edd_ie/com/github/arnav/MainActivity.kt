@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.ar.core.ArCoreApk
+import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
@@ -77,7 +78,8 @@ class MainActivity : AppCompatActivity() {
                 return
             } else {
                 // Handle other exceptions
-                binding.txt1.text = "Error requesting ARCore install"
+                Toast.makeText(this, "Error requesting ARCore install: $e", Toast.LENGTH_LONG)
+                    .show()
                 Log.e("ARCore", "Error requesting ARCore install", e)
             }
         }
@@ -132,6 +134,21 @@ class MainActivity : AppCompatActivity() {
 
         // Do feature-specific operations here, such as enabling depth or turning on
         // support for Augmented Faces.
+        // Create a camera config filter for the session.
+
+        val filter = CameraConfigFilter(session)
+
+        // Get list of configs that match filter settings.
+        // In this case, this list is guaranteed to contain at least one element,
+        // because both TargetFps.TARGET_FPS_30 and DepthSensorUsage.DO_NOT_USE
+        // are supported on all ARCore supported devices.
+        val cameraConfigList = session?.getSupportedCameraConfigs(filter)
+        println(cameraConfigList)
+
+        // Use element 0 from the list of returned camera configs. This is because
+        // it contains the camera config that best matches the specified filter
+        // settings.
+        session?.cameraConfig = cameraConfigList?.get(0)!!
 
         // Configure the session.
         session?.configure(config)
