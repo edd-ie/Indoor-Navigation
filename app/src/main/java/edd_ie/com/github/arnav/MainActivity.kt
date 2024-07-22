@@ -10,19 +10,27 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.ar.core.ArCoreApk
+import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
 import com.google.ar.core.Session
+import com.google.ar.core.SharedCamera
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import edd_ie.com.github.arnav.databinding.ActivityMainBinding
+import java.util.EnumSet
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+
+
 
     // requestInstall(Activity, true) will triggers installation of
     // Google Play Services for AR if necessary.
     private var userRequestedInstall = true
     private var session: Session? = null
+    private var sharedSession: Session? = null
+    private var sharedCamera: SharedCamera? = null
+    private var cameraId: String? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +127,17 @@ class MainActivity : AppCompatActivity() {
         // Enable AR-related functionality on ARCore supported devices only.
         arSupportCheck()
 
+
+        // Create an ARCore session that supports camera sharing.
+        sharedSession = Session(this, EnumSet.of(Session.Feature.SHARED_CAMERA))
+
+        // Store the ARCore shared camera reference.
+        sharedCamera = sharedSession!!.sharedCamera
+
+        // Store the ID of the camera that ARCore uses.
+        cameraId = sharedSession!!.cameraConfig.cameraId
+
+
         //Initializing ar session
         createArSession()
     }
@@ -138,17 +157,25 @@ class MainActivity : AppCompatActivity() {
 
         val filter = CameraConfigFilter(session)
 
+        // Return only camera configs that target 30 fps camera capture frame rate.
+        filter.targetFps = EnumSet.of(CameraConfig.TargetFps.TARGET_FPS_30)
+
         // Get list of configs that match filter settings.
         // In this case, this list is guaranteed to contain at least one element,
         // because both TargetFps.TARGET_FPS_30 and DepthSensorUsage.DO_NOT_USE
         // are supported on all ARCore supported devices.
         val cameraConfigList = session?.getSupportedCameraConfigs(filter)
-        println(cameraConfigList)
+        if (cameraConfigList != null) {
+            for(x in cameraConfigList){
+                println(x)
+            }
+        }
 
         // Use element 0 from the list of returned camera configs. This is because
         // it contains the camera config that best matches the specified filter
         // settings.
         session?.cameraConfig = cameraConfigList?.get(0)!!
+
 
         // Configure the session.
         session?.configure(config)
